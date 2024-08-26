@@ -116,7 +116,7 @@ class _MyControlPageState extends State<MyControl> {
                                 barPointers: [
                                   LinearBarPointer(
                                       color: Colors.white,
-                                      value: websocketService.message['ut'])
+                                      value: websocketService.message['ut'] ?? 0.0)
                                 ],
                                 orientation: LinearGaugeOrientation.vertical,
                               );
