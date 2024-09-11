@@ -32,12 +32,20 @@ class _MyControlPageState extends State<MyControl> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                Consumer<WebSocketService>(
+                  builder: (context, websocketService, child) {
+                    return Text(
+                      "Connected: ${websocketService.isConnected.toString()}",
+                      style: TextStyle(color: Colors.white),
+                    );
+                  },
+                ),
                 SizedBox(
                   width: 200,
                   height: 200,
                   child: MaterialButton(
                     onPressed: () {
-                      context.read<WebSocketService>().sendMessage("start");
+                      context.read<WebSocketService>().sendMessage("0.01");
                     },
                     color: Colors.green,
                     textColor: Colors.white,
@@ -48,28 +56,28 @@ class _MyControlPageState extends State<MyControl> {
                     ),
                   ),
                 ),
+                //SizedBox(
+                //  width: 200,
+                //  height: 200,
+                //  child: MaterialButton(
+                //    onPressed: () {
+                //      context.read<WebSocketService>().sendMessage("pause");
+                //    },
+                //    color: Colors.orange,
+                //    textColor: Colors.white,
+                //    padding: EdgeInsets.all(16),
+                //    shape: CircleBorder(),
+                //    child: const Text(
+                //      "PAUSE",
+                //    ),
+                //  ),
+                //),
                 SizedBox(
                   width: 200,
                   height: 200,
                   child: MaterialButton(
                     onPressed: () {
-                      context.read<WebSocketService>().sendMessage("pause");
-                    },
-                    color: Colors.orange,
-                    textColor: Colors.white,
-                    padding: EdgeInsets.all(16),
-                    shape: CircleBorder(),
-                    child: const Text(
-                      "PAUSE",
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: MaterialButton(
-                    onPressed: () {
-                      context.read<WebSocketService>().sendMessage("stop");
+                      context.read<WebSocketService>().sendMessage("0.00");
                     },
                     color: Colors.red,
                     textColor: Colors.white,
@@ -79,7 +87,34 @@ class _MyControlPageState extends State<MyControl> {
                       "STOP",
                     ),
                   ),
-                )
+                ),
+                // Add TextField and Send Button
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          labelText: 'Speed',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_controller.text.isNotEmpty) {
+                            context
+                                .read<WebSocketService>()
+                                .sendMessage(_controller.text);
+                            _controller.clear(); // Clear the text field
+                          }
+                        },
+                        child: Text('Set speed'),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -116,7 +151,8 @@ class _MyControlPageState extends State<MyControl> {
                                 barPointers: [
                                   LinearBarPointer(
                                       color: Colors.white,
-                                      value: websocketService.message['ut'] ?? 0.0)
+                                      value:
+                                          websocketService.message['ut'] ?? 0.0)
                                 ],
                                 orientation: LinearGaugeOrientation.vertical,
                               );

@@ -15,13 +15,22 @@ class WebSocketService with ChangeNotifier {
   }
 
   _connect() async {
-    _channel = WebSocketChannel.connect(Uri.parse('ws://192.168.1.71:5000'));
-    getMessages();
+    try {
+      _channel = WebSocketChannel.connect(Uri.parse('ws://grlrr.local:5000'));
+      _isConnected = true;
+      notifyListeners(); // Notify the listeners that connection is established
+      getMessages();
+    } catch (e) {
+      _isConnected = false;
+      notifyListeners();
+      print("WebSocket connection error: $e");
+    }
   }
 
   void getMessages() {
     _channel?.stream.listen(
       (data) {
+        // Set to true when message is received (connection confirmed)
         _isConnected = true;
 
         // Parse the JSON data
@@ -37,13 +46,13 @@ class WebSocketService with ChangeNotifier {
         print("WebSocket error: $error");
         _isConnected = false;
         notifyListeners();
-        _reconnect();
+        _reconnect(); // Try to reconnect on error
       },
       onDone: () {
         print("WebSocket connection closed");
         _isConnected = false;
         notifyListeners();
-        _reconnect();
+        _reconnect(); // Try to reconnect when done
       },
     );
   }
@@ -51,15 +60,24 @@ class WebSocketService with ChangeNotifier {
   void sendMessage(String message) {
     if (_channel != null) {
       print("Sent message: $message");
+      double val = double.parse(message);
+      message = jsonEncode({
+        "motorSpeed0": val,
+        "motorSpeed1": val,
+        "motorSpeed2": val,
+        "motorSpeed3": val
+      });
       _channel?.sink.add(message);
-      notifyListeners();
+      // No need to call notifyListeners here since it doesn't affect UI state
     } else {
       print("WebSocket is not connected.");
     }
   }
 
   void _reconnect() async {
-    await _connect();
+    print("Attempting to reconnect...");
+    await Future.delayed(Duration(seconds: 5)); // Optional: Wait before reconnecting
+    _connect();
   }
 
   @override
