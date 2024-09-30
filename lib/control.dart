@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
+
 class MyControl extends StatefulWidget {
   const MyControl({super.key});
 
@@ -21,207 +22,172 @@ class _MyControlPageState extends State<MyControl> {
     return Scaffold(
       appBar: const MyAppBar(),
       drawer: MyDrawer(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Consumer<WebSocketService>(
-                  builder: (context, websocketService, child) {
-                    return Text(
-                      "Connected: ${websocketService.isConnected.toString()}",
-                      style: TextStyle(color: Colors.white),
-                    );
-                  },
-                ),
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: MaterialButton(
-                    onPressed: () {
-                      context.read<WebSocketService>().sendMessage("0.01");
-                    },
-                    color: Colors.green,
-                    textColor: Colors.white,
-                    padding: EdgeInsets.all(16),
-                    shape: CircleBorder(),
-                    child: const Text(
-                      "START",
-                    ),
-                  ),
-                ),
-                //SizedBox(
-                //  width: 200,
-                //  height: 200,
-                //  child: MaterialButton(
-                //    onPressed: () {
-                //      context.read<WebSocketService>().sendMessage("pause");
-                //    },
-                //    color: Colors.orange,
-                //    textColor: Colors.white,
-                //    padding: EdgeInsets.all(16),
-                //    shape: CircleBorder(),
-                //    child: const Text(
-                //      "PAUSE",
-                //    ),
-                //  ),
-                //),
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: MaterialButton(
-                    onPressed: () {
-                      context.read<WebSocketService>().sendMessage("0.00");
-                    },
-                    color: Colors.red,
-                    textColor: Colors.white,
-                    padding: EdgeInsets.all(16),
-                    shape: CircleBorder(),
-                    child: const Text(
-                      "STOP",
-                    ),
-                  ),
-                ),
-                // Add TextField and Send Button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          labelText: 'Speed',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_controller.text.isNotEmpty) {
-                            context
-                                .read<WebSocketService>()
-                                .sendMessage(_controller.text);
-                            _controller.clear(); // Clear the text field
-                          }
-                        },
-                        child: Text('Set speed'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 4)),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(), color: Colors.blue),
-                    ),
-                  ),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(), color: Colors.grey),
-                          child: Consumer<WebSocketService>(
-                            builder: ((context, websocketService, child) {
-                              return SfLinearGauge(
-                                tickPosition: LinearElementPosition.outside,
-                                labelPosition: LinearLabelPosition.outside,
-                                barPointers: [
-                                  LinearBarPointer(
-                                      color: Colors.white,
-                                      value:
-                                          websocketService.message['ut'] ?? 0.0)
-                                ],
-                                orientation: LinearGaugeOrientation.vertical,
-                              );
-                            }),
+      //bottomNavigationBar: MyBottomNavigationBar(),
+      body: Consumer<WebSocketService>(
+        builder: (context, websocketService, child) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - 80,
+                minWidth: MediaQuery.of(context).size.width,
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.black,
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () {
+                              context.read<WebSocketService>().connect();
+                            },
+                            child: const Text('connect to server'),
                           ),
-                        ),
-                        SfLinearGauge(
-                          tickPosition: LinearElementPosition.outside,
-                          labelPosition: LinearLabelPosition.outside,
-                          barPointers: [
-                            LinearBarPointer(color: Colors.white, value: 10)
+
+                          Text(
+                            "Connected: ${websocketService.isConnected.toString()}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+
+                          Text(
+                            "Message: ${websocketService.rxMsg}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+
+                          Text(" "),
+                          // Add TextField and Send Button
+
+                          TextField(
+                            controller: _controller,
+                            decoration: const InputDecoration(
+                              labelText: 'Speed',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              foregroundColor: Colors.black,
+                            ),
+                            onPressed: () {
+                              if (_controller.text.isNotEmpty) {
+                                context
+                                    .read<WebSocketService>()
+                                    .setProcessParameter(
+                                        "process_speed", _controller.text);
+                                _controller.clear(); // Clear the text field
+                              }
+                            },
+                            child: const Text('Set process speed'),
+                          ),
+
+                          SizedBox(
+                            width: 150,
+                            height: 150,
+                            child: MaterialButton(
+                              onPressed: () {
+                                context.read<WebSocketService>().startProcess();
+                              },
+                              color: Colors.green,
+                              textColor: Colors.white,
+                              padding: const EdgeInsets.all(16),
+                              shape: const CircleBorder(),
+                              child: const Text(
+                                "START",
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white, width: 4)),
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                  border: Border.all(), color: Colors.blue),
+                            ),
+                            Row(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                      border: Border.all(), color: Colors.grey),
+                                  child: Consumer<WebSocketService>(
+                                    builder:
+                                        ((context, websocketService, child) {
+                                      return SfLinearGauge(
+                                        tickPosition:
+                                            LinearElementPosition.outside,
+                                        labelPosition:
+                                            LinearLabelPosition.outside,
+                                        barPointers: [
+                                          LinearBarPointer(
+                                              color: Colors.white,
+                                              value: websocketService
+                                                      .rxJson['ut'] ??
+                                                  0.0)
+                                        ],
+                                        orientation:
+                                            LinearGaugeOrientation.vertical,
+                                      );
+                                    }),
+                                  ),
+                                ),
+                                SfLinearGauge(
+                                  tickPosition: LinearElementPosition.outside,
+                                  labelPosition: LinearLabelPosition.outside,
+                                  barPointers: [
+                                    const LinearBarPointer(
+                                        color: Colors.white, value: 10)
+                                  ],
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            height: 150,
+                            child: MaterialButton(
+                              onPressed: () {
+                                context.read<WebSocketService>().stopProcess();
+                              },
+                              color: Colors.red,
+                              textColor: Colors.white,
+                              padding: const EdgeInsets.all(16),
+                              shape: const CircleBorder(),
+                              child: const Text(
+                                "STOP",
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () {
-                    print("hello");
-                  },
-                  child: Text('STOP'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () {
-                    print("hello");
-                  },
-                  child: Text('STOP'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () {
-                    print("hello");
-                  },
-                  child: Text('STOP'),
-                ),
-              ],
-            ),
-          ),
-          //Consumer<WebSocketService>(
-          //  builder: ((context, value, child) {
-          //    return Text(value.message.toString());
-          //  }),
-          //),
-          //Consumer<WebSocketService>(
-          //  builder: ((context, value, child) {
-          //    return Text(value.isConnected.toString());
-          //  }),
-          //),
-        ],
+          );
+        },
       ),
     );
   }
@@ -230,26 +196,5 @@ class _MyControlPageState extends State<MyControl> {
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-}
-
-// Define your custom colors
-class CustomColors {
-  static const Color surfaceContainerHighest =
-      Color(0xFF1F1F1F); // Example color
-}
-
-// Extend ThemeData to include custom colors
-class CustomThemeData {
-  static ThemeData themeData(BuildContext context) {
-    final baseTheme =
-        ThemeData.light(); // or ThemeData.dark() depending on your app
-
-    return baseTheme.copyWith(
-      colorScheme: baseTheme.colorScheme.copyWith(
-        // Add custom colors to the color scheme
-        surface: CustomColors.surfaceContainerHighest,
-      ),
-    );
   }
 }

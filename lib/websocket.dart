@@ -4,38 +4,47 @@ import 'dart:convert'; // Import the dart:convert library for JSON parsing
 
 class WebSocketService with ChangeNotifier {
   WebSocketChannel? _channel;
-  Map<String, dynamic> _message = {};
-  Map<String, dynamic> get message => _message;
+
+  String _txMsg = '';
+  String get txMsg => _txMsg;
+  String _rxMsg = '';
+  String get rxMsg => _rxMsg;
+
+  Map<String, dynamic> _txJson = {};
+  Map<String, dynamic> get txJson => _txJson;
+  Map<String, dynamic> _rxJson = {};
+  Map<String, dynamic> get rxJson => _rxJson;
 
   bool _isConnected = false;
   bool get isConnected => _isConnected;
 
-  WebSocketService() {
-    _connect();
-  }
+  WebSocketService();
 
-  _connect() async {
+  void connect() {
+          _isConnected = false;
+
     try {
       _channel = WebSocketChannel.connect(Uri.parse('ws://grlrr.local:5000'));
-      _isConnected = true;
-      notifyListeners(); // Notify the listeners that connection is established
       getMessages();
     } catch (e) {
       _isConnected = false;
       notifyListeners();
       print("WebSocket connection error: $e");
     }
+
+    notifyListeners(); // Notify the listeners that connection is established
   }
 
   void getMessages() {
+    _isConnected = true;
+
     _channel?.stream.listen(
-      (data) {
+      (_rxJson) {
         // Set to true when message is received (connection confirmed)
-        _isConnected = true;
 
         // Parse the JSON data
         try {
-          _message = jsonDecode(data);
+          _rxMsg = jsonDecode(_rxJson);
         } catch (e) {
           print("Error parsing JSON: $e");
         }
@@ -46,38 +55,45 @@ class WebSocketService with ChangeNotifier {
         print("WebSocket error: $error");
         _isConnected = false;
         notifyListeners();
-        _reconnect(); // Try to reconnect on error
+        reconnect(); // Try to reconnect on error
       },
       onDone: () {
         print("WebSocket connection closed");
         _isConnected = false;
         notifyListeners();
-        _reconnect(); // Try to reconnect when done
+        reconnect(); // Try to reconnect when done
       },
     );
   }
 
-  void sendMessage(String message) {
-    if (_channel != null) {
-      print("Sent message: $message");
-      double val = double.parse(message);
-      message = jsonEncode({
-        "motorSpeed0": val,
-        "motorSpeed1": val,
-        "motorSpeed2": val,
-        "motorSpeed3": val
-      });
-      _channel?.sink.add(message);
-      // No need to call notifyListeners here since it doesn't affect UI state
-    } else {
-      print("WebSocket is not connected.");
-    }
+  void startProcess() {
+    _txJson = {"process": "start"};
+    _sendMessage();
   }
 
-  void _reconnect() async {
+  void stopProcess() {
+    _txJson = {"process": "stop"};
+    _sendMessage();
+  }
+
+  void setProcessParameter(String parameterName, String parameterValue) {
+    _txJson = {parameterName: parameterValue};
+    _sendMessage();
+  }
+
+  void _sendMessage() {
+    _txMsg = jsonEncode(_txJson);
+    _channel?.sink.add(_txMsg);
+    print(_txMsg);
+  }
+
+  void reconnect() async {
+    _channel?.sink.close();
+
     print("Attempting to reconnect...");
-    await Future.delayed(Duration(seconds: 5)); // Optional: Wait before reconnecting
-    _connect();
+    await Future.delayed(
+        Duration(seconds: 5)); // Optional: Wait before reconnecting
+    connect();
   }
 
   @override

@@ -41,10 +41,9 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Provider Demo',
-        routerConfig: router(),
-        theme: ThemeData.dark(),
-      ),
-    );
+          title: 'Provider Demo',
+          routerConfig: router(),
+          theme: ThemeData.dark(),
+    ),);
   }
 }
